@@ -43,21 +43,23 @@ class Equipo extends \yii\db\ActiveRecord
      * {@inheritdoc}
      */
     public function rules()
-    {
-        return [
-            [['fabricante', 'modelo', 'numero_serie', 'ubicacion', 'sistema_operativo_actual', 'observaciones', 'fecha_baja', 'motivo_baja', 'created_at', 'updated_at'], 'default', 'value' => null],
-            [['codigo', 'tipo', 'estado_general'], 'required'],
-            [['observaciones', 'motivo_baja'], 'string'],
-            [['fecha_baja'], 'safe'],
-            [['created_at', 'updated_at'], 'integer'],
-            [['codigo'], 'string', 'max' => 20],
-            [['tipo'], 'string', 'max' => 40],
-            [['fabricante', 'modelo', 'numero_serie', 'sistema_operativo_actual'], 'string', 'max' => 100],
-            [['ubicacion'], 'string', 'max' => 150],
-            [['estado_general'], 'string', 'max' => 30],
-            [['codigo'], 'unique'],
-        ];
-    }
+{
+    return [
+        [['fabricante', 'modelo', 'numero_serie', 'ubicacion','sistema_operativo_actual', 'observaciones', 'fecha_baja','motivo_baja'], 'default', 'value' => null],
+        [['codigo', 'tipo', 'estado_general', 'estado_registro'], 'required'],
+        [['observaciones', 'motivo_baja'], 'string'],
+        [['fecha_baja'], 'date', 'format' => 'php:Y-m-d'],
+        [['codigo'], 'string', 'max' => 20],
+        [['tipo'], 'string', 'max' => 40],
+        [['fabricante', 'modelo', 'numero_serie','sistema_operativo_actual'], 'string', 'max' => 100],
+        [['ubicacion'], 'string', 'max' => 150],
+        [['estado_general'], 'string', 'max' => 30],
+        [['codigo'], 'unique'],
+        [['fecha_baja'],'required','when' => function ($model) {return $model->estado_registro === 'Dado de baja';},],
+        [['motivo_baja'],'required','when' => function ($model) {return $model->estado_registro === 'Dado de baja';},],
+        [['estado_registro'], 'in', 'range' => ['Activo', 'Dado de baja']],
+    ];
+}
 
     /**
      * {@inheritdoc}
@@ -74,6 +76,7 @@ class Equipo extends \yii\db\ActiveRecord
             'ubicacion' => 'Ubicacion',
             'sistema_operativo_actual' => 'Sistema Operativo Actual',
             'estado_general' => 'Estado General',
+            'estado_registro' => 'Situación administrativa',
             'observaciones' => 'Observaciones',
             'fecha_baja' => 'Fecha Baja',
             'motivo_baja' => 'Motivo Baja',
@@ -121,5 +124,36 @@ class Equipo extends \yii\db\ActiveRecord
     {
         return $this->hasMany(Mantenimiento::class, ['equipo_id' => 'id']);
     }
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => \yii\behaviors\TimestampBehavior::class,
+                'attributes' => [
+                    \yii\db\ActiveRecord::EVENT_BEFORE_INSERT => [
+                        'created_at',
+                        'updated_at',
+                    ],
+                    \yii\db\ActiveRecord::EVENT_BEFORE_UPDATE => [
+                        'updated_at',
+                    ],
+                ],
+                'value' => function () {
+                    return date('Y-m-d H:i:s');
+                },
+            ],
+        ];
+    }
+
+    public function beforeValidate()
+{
+    if ($this->estado_registro === 'Activo') {
+        $this->fecha_baja = null;
+        $this->motivo_baja = null;
+    }
+
+    return parent::beforeValidate();
+}
 
 }

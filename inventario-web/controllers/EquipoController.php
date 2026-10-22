@@ -36,6 +36,8 @@ class EquipoController extends Controller
      *
      * @return string
      */
+
+
     public function actionIndex()
     {
         $searchModel = new EquipoSearch();
@@ -43,6 +45,23 @@ class EquipoController extends Controller
 
         return $this->render('index', [
             'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+
+    public function actionBajas()
+    {
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => \app\models\Equipo::find()
+                ->where(['estado_registro' => 'Dado de baja'])
+                ->orderBy(['fecha_baja' => SORT_DESC]),
+            'pagination' => [
+                'pageSize' => 10,
+            ],
+        ]);
+
+        return $this->render('bajas', [
             'dataProvider' => $dataProvider,
         ]);
     }
@@ -111,9 +130,10 @@ class EquipoController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        return $this->redirect([
+            'update',
+            'id' => $id,
+    ]);
     }
 
     /**

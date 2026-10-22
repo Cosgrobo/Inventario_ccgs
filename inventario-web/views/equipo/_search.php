@@ -25,6 +25,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'modelo') ?>
 
+    <?= $form->field($model, 'estado_registro') ?>
+
     <?php // echo $form->field($model, 'numero_serie') ?>
 
     <?php // echo $form->field($model, 'ubicacion') ?>

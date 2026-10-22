@@ -14,7 +14,11 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'codigo')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'tipo')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'tipo')->dropDownList([ 'Computadora de escritorio' => 'Computadora de escritorio',
+    'Laptop' => 'Laptop',
+    'Servidor' => 'Servidor',
+    'Cliente ligero' => 'Cliente ligero',], 
+    ['prompt' => 'Selecciona el tipo de equipo']) ?>
 
     <?= $form->field($model, 'fabricante')->textInput(['maxlength' => true]) ?>
 
@@ -26,22 +30,65 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'sistema_operativo_actual')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'estado_general')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'estado_general')->dropDownList([
+    'Funcionando' => 'Funcionando',
+    'En revisión' => 'En revisión',
+    'En mantenimiento' => 'En mantenimiento',
+    'Fuera de servicio' => 'Fuera de servicio',],
+    ['prompt' => 'Selecciona el estado']) ?>
+
+    <?= $form->field($model, 'estado_registro')->dropDownList([
+        'Activo' => 'Activo',
+        'Dado de baja' => 'Dado de baja',
+        ], [
+        'id' => 'estado-registro',
+        'prompt' => 'Selecciona la situación',]) 
+    ?>
 
     <?= $form->field($model, 'observaciones')->textarea(['rows' => 6]) ?>
 
-    <?= $form->field($model, 'fecha_baja')->textInput() ?>
 
-    <?= $form->field($model, 'motivo_baja')->textarea(['rows' => 6]) ?>
+    <div id="seccion-baja" style="display: none;">
+    <?= $form->field($model, 'fecha_baja')->textInput([
+        'type' => 'date',
+    ]) ?>
 
-    <?= $form->field($model, 'created_at')->textInput() ?>
+    <?= $form->field($model, 'motivo_baja')->textarea([
+        'rows' => 4,
+    ]) ?>
 
-    <?= $form->field($model, 'updated_at')->textInput() ?>
+    </div>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
+
+
+    <?php
+    $script = <<<'JS'
+    function actualizarSeccionBaja() {
+        const estado = document.getElementById('estado-registro');
+        const seccion = document.getElementById('seccion-baja');
+
+        if (!estado || !seccion) {
+            return;
+        }
+
+        const mostrar = estado.value === 'Dado de baja';
+
+        seccion.style.display = mostrar ? 'block' : 'none';
+    }
+
+    document.getElementById('estado-registro')
+        ?.addEventListener('change', actualizarSeccionBaja);
+
+    actualizarSeccionBaja();
+    JS;
+
+    $this->registerJs($script);
+    ?>
+
 
 </div>

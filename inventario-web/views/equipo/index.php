@@ -17,9 +17,17 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h1><?= Html::encode($this->title) ?></h1>
 
+    
     <p>
-        <?= Html::a('Create Equipo', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Registrar equipo', ['create'], [
+            'class' => 'btn btn-success',
+        ]) ?>
+
+        <?= Html::a('Equipos dados de baja', ['bajas'], [
+            'class' => 'btn btn-outline-secondary',
+        ]) ?>
     </p>
+
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
@@ -38,16 +46,18 @@ $this->params['breadcrumbs'][] = $this->title;
             //'ubicacion',
             //'sistema_operativo_actual',
             //'estado_general',
+            'estado_registro',
             //'observaciones:ntext',
             //'fecha_baja',
             //'motivo_baja:ntext',
             //'created_at',
             //'updated_at',
-            [
-                'class' => ActionColumn::className(),
+           [
+                'class' => ActionColumn::class,
+                'template' => '{view} {update}',
                 'urlCreator' => function ($action, Equipo $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                },
             ],
         ],
     ]); ?>

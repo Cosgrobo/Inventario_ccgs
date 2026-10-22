@@ -41,7 +41,7 @@ class EquipoSearch extends Equipo
      */
     public function search($params, $formName = null)
     {
-        $query = Equipo::find();
+        $query = Equipo::find()->andWhere(['estado_registro' => 'Activo']);;
 
         // add conditions that should always apply here
 
