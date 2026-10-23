@@ -1,7 +1,8 @@
 <?php
 
 namespace app\models;
-
+use app\models\Componente;
+use app\models\Diagnostico;
 use Yii;
 
 /**

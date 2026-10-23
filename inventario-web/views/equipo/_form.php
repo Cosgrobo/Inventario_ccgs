@@ -48,7 +48,7 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'observaciones')->textarea(['rows' => 6]) ?>
 
 
-    <div id="seccion-baja" style="display: none;">
+   <div id="seccion-baja" style="display: none;" disabled>
     <?= $form->field($model, 'fecha_baja')->textInput([
         'type' => 'date',
     ]) ?>
@@ -79,6 +79,10 @@ use yii\widgets\ActiveForm;
         const mostrar = estado.value === 'Dado de baja';
 
         seccion.style.display = mostrar ? 'block' : 'none';
+
+        seccion.querySelectorAll('input, textarea, select').forEach(function (campo) {
+            campo.disabled = !mostrar;
+        });
     }
 
     document.getElementById('estado-registro')

@@ -39,11 +39,12 @@ class Diagnostico extends \yii\db\ActiveRecord
         return [
             [['pruebas_realizadas', 'fallas_encontradas', 'observaciones'], 'default', 'value' => null],
             [['equipo_id', 'fecha', 'tipo', 'resultado'], 'required'],
+            [['fecha'], 'date', 'format' => 'php:Y-m-d'],
             [['equipo_id'], 'integer'],
             [['fecha'], 'safe'],
             [['pruebas_realizadas', 'fallas_encontradas', 'observaciones'], 'string'],
-            [['tipo'], 'string', 'max' => 50],
-            [['resultado'], 'string', 'max' => 40],
+            [['tipo'], 'in', 'range' => ['Preventivo','Correctivo','Diagnóstico inicial',]],
+            [['resultado'], 'in', 'range' => ['Funcional','Funcional con fallas','No funcional','Pendiente',]],
             [['equipo_id'], 'exist', 'skipOnError' => true, 'targetClass' => Equipo::class, 'targetAttribute' => ['equipo_id' => 'id']],
         ];
     }

@@ -65,22 +65,37 @@ class DiagnosticoController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate()
+
+    public function actionCreate($equipo_id = null)
     {
         $model = new Diagnostico();
 
+        if ($equipo_id !== null) {
+            $model->equipo_id = $equipo_id;
+        }
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+                return $this->redirect([
+                    '/equipo/view',
+                    'id' => $model->equipo_id,
+                ]);
             }
         } else {
             $model->loadDefaultValues();
+            
+            if ($equipo_id !== null) {
+                $model->equipo_id = $equipo_id;
+            }
+
+            $model->fecha = date('Y-m-d');
         }
 
         return $this->render('create', [
             'model' => $model,
         ]);
     }
+
 
     /**
      * Updates an existing Diagnostico model.
@@ -89,18 +104,28 @@ class DiagnosticoController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+        
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $equipoId = $model->equipo_id;
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if (
+            $this->request->isPost
+            && $model->load($this->request->post())
+            && $model->save()
+        ) {
+            return $this->redirect([
+                '/equipo/view',
+                'id' => $equipoId,
+            ]);
         }
 
         return $this->render('update', [
             'model' => $model,
         ]);
     }
+
 
     /**
      * Deletes an existing Diagnostico model.
@@ -109,12 +134,20 @@ class DiagnosticoController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+    
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $equipoId = $model->equipo_id;
 
-        return $this->redirect(['index']);
+        $model->delete();
+
+        return $this->redirect([
+            '/equipo/view',
+            'id' => $equipoId,
+        ]);
     }
+
 
     /**
      * Finds the Diagnostico model based on its primary key value.

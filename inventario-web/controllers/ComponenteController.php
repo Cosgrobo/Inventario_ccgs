@@ -7,6 +7,8 @@ use app\models\ComponenteSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\data\ActiveDataProvider;
+use yii\db\Transaction;
 
 /**
  * ComponenteController implements the CRUD actions for Componente model.
@@ -89,18 +91,23 @@ class ComponenteController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $this->redirect([
+                '/equipo/view',
+                'id' => $model->equipo_id,
+            ]);
         }
 
         return $this->render('update', [
             'model' => $model,
         ]);
     }
+
 
     /**
      * Deletes an existing Componente model.
@@ -109,12 +116,87 @@ class ComponenteController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+  
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $equipoId = $model->equipo_id;
 
-        return $this->redirect(['index']);
+        $model->delete();
+
+        return $this->redirect([
+            '/equipo/view',
+            'id' => $equipoId,
+        ]);
     }
+
+
+    public function actionMultiple($equipo_id)
+    {
+        $equipo = \app\models\Equipo::findOne($equipo_id);
+
+        if ($equipo === null) {
+            throw new NotFoundHttpException('El equipo no existe.');
+        }
+
+        $componentes = [new Componente()];
+
+        if ($this->request->isPost) {
+            $post = $this->request->post();
+            $filas = $post['Componente'] ?? [];
+
+            $componentes = [];
+
+            foreach ($filas as $fila) {
+                $componente = new Componente();
+                $componente->equipo_id = $equipo->id;
+
+                if ($componente->load(['Componente' => $fila])) {
+                    $componentes[] = $componente;
+                }
+            }
+
+            $validos = !empty($componentes);
+
+            foreach ($componentes as $componente) {
+                $componente->equipo_id = $equipo->id;
+
+                if (!$componente->validate()) {
+                    $validos = false;
+                }
+            }
+
+            if ($validos) {
+                $transaccion = \Yii::$app->db->beginTransaction();
+
+                try {
+                    foreach ($componentes as $componente) {
+                        if (!$componente->save(false)) {
+                            throw new \RuntimeException(
+                                'No se pudo guardar un componente.'
+                            );
+                        }
+                    }
+
+                    $transaccion->commit();
+
+                    return $this->redirect([
+                        '/equipo/view',
+                        'id' => $equipo->id,
+                    ]);
+                } catch (\Throwable $e) {
+                    $transaccion->rollBack();
+                    throw $e;
+                }
+            }
+        }
+
+        return $this->render('multiple', [
+            'equipo' => $equipo,
+            'componentes' => $componentes,
+        ]);
+    }
+
 
     /**
      * Finds the Componente model based on its primary key value.
