@@ -73,7 +73,14 @@ $equipos = ArrayHelper::map(
             'Guardar diagnóstico',
             ['class' => 'btn btn-success']
         ) ?>
+
+        
+     <?= Html::a('Volver al equipo',
+            ['/equipo/view', 'id' => $model->equipo_id],
+            ['class' => 'btn btn-default']
+        ) ?>
     </div>
+
 
     <?php ActiveForm::end(); ?>
 

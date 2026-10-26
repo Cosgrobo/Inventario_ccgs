@@ -6,8 +6,8 @@ use yii\helpers\Html;
 /** @var app\models\Componente $model */
 
 $this->title = 'Update Componente: ' . $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Componentes', 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
+$this->params['breadcrumbs'][] = ['label' => 'Componentes'];
+$this->params['breadcrumbs'][] = ['label' => $model->id];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="componente-update">

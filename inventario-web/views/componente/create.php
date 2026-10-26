@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /** @var app\models\Componente $model */
 
 $this->title = 'Create Componente';
-$this->params['breadcrumbs'][] = ['label' => 'Componentes', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Componentes'];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="componente-create">
@@ -16,5 +16,4 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('_form', [
         'model' => $model,
     ]) ?>
-
 </div>

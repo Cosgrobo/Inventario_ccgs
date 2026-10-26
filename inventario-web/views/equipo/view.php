@@ -164,11 +164,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h2>Historial de diagnósticos</h2>
     <p>
-   <?= Html::a(
-        'diagnóstico nuevo',
-        ['/diagnostico/create', 'equipo_id' => $model->id],
-        ['class' => 'btn btn-success']) 
-        ?>
+    <?php if ($model->estado_registro === 'Activo'): ?>
+        <?= Html::a(
+            'Registrar diagnóstico',
+            ['/diagnostico/create', 'equipo_id' => $model->id],
+            ['class' => 'btn btn-success']
+        ) ?>
+    <?php endif; ?>
     </p>
 
     <?php if (empty($model->diagnosticos)): ?>

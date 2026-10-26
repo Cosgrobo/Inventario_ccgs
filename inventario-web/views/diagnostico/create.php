@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /** @var app\models\Diagnostico $model */
 
 $this->title = 'Create Diagnostico';
-$this->params['breadcrumbs'][] = ['label' => 'Diagnosticos', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Diagnosticos'];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="diagnostico-create">
@@ -16,5 +16,5 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('_form', [
         'model' => $model,
     ]) ?>
-
+    
 </div>

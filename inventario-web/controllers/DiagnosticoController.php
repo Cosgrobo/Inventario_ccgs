@@ -66,12 +66,21 @@ class DiagnosticoController extends Controller
      * @return string|\yii\web\Response
      */
 
+
     public function actionCreate($equipo_id = null)
     {
         $model = new Diagnostico();
 
         if ($equipo_id !== null) {
-            $model->equipo_id = $equipo_id;
+            $equipo = \app\models\Equipo::findOne($equipo_id);
+
+            if ($equipo === null || $equipo->estado_registro !== 'Activo') {
+                throw new \yii\web\ForbiddenHttpException(
+                    'Solo se pueden registrar diagnósticos para equipos activos.'
+                );
+            }
+
+            $model->equipo_id = $equipo->id;
         }
 
         if ($this->request->isPost) {
@@ -83,7 +92,7 @@ class DiagnosticoController extends Controller
             }
         } else {
             $model->loadDefaultValues();
-            
+
             if ($equipo_id !== null) {
                 $model->equipo_id = $equipo_id;
             }
@@ -95,6 +104,7 @@ class DiagnosticoController extends Controller
             'model' => $model,
         ]);
     }
+
 
 
     /**

@@ -30,6 +30,11 @@ use yii\widgets\ActiveForm;
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+
+        <?= Html::a('Volver al equipo',
+            ['/equipo/view', 'id' => $model->equipo_id],
+            ['class' => 'btn btn-default']
+        ) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
