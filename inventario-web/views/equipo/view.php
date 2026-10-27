@@ -1,5 +1,5 @@
-<?php
 
+<?php
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 
@@ -23,27 +23,24 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Editar equipo', [
-            'update',
-            'id' => $model->id,
-        ], [
-            'class' => 'btn btn-primary',
-        ]) ?>
+        <?= Html::a(
+            'Editar equipo',
+            ['update', 'id' => $model->id],
+            ['class' => 'btn btn-primary']
+        ) ?>
 
-        <?= Html::a('añadir componentes', [
-            '/componente/multiple',
-            'equipo_id' => $model->id,
-        ], [
-            'class' => 'btn btn-success',
-        ]) ?>
+        <?= Html::a(
+            'Añadir componentes',
+            ['/componente/multiple', 'equipo_id' => $model->id],
+            ['class' => 'btn btn-success']
+        ) ?>
 
-        <?= Html::a('Volver a equipos', [
-            'index',
-        ], [
-            'class' => 'btn btn-default',
-        ]) ?>
+        <?= Html::a(
+            'Volver a equipos',
+            ['index'],
+            ['class' => 'btn btn-default']
+        ) ?>
     </p>
-
 
     <?= DetailView::widget([
         'model' => $model,
@@ -91,11 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'created_at',
             'updated_at',
         ],
-    ])
-    ?>
-
-
-
+    ]) ?>
 
     <hr>
 
@@ -126,30 +119,31 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tbody>
                     <?php foreach ($model->componentes as $componente): ?>
                         <tr>
-                            <td><?= \yii\helpers\Html::encode($componente->tipo) ?></td>
-                            <td><?= \yii\helpers\Html::encode($componente->marca ?? '') ?></td>
-                            <td><?= \yii\helpers\Html::encode($componente->modelo ?? '') ?></td>
-                            <td><?= \yii\helpers\Html::encode($componente->numero_serie ?? '') ?></td>
-                            <td><?= \yii\helpers\Html::encode($componente->capacidad ?? '') ?></td>
-                            <td><?= \yii\helpers\Html::encode($componente->estado) ?></td>
-                            <td><?= \yii\helpers\Html::encode($componente->observaciones ?? '') ?></td>
+                            <td><?= Html::encode($componente->tipo) ?></td>
+                            <td><?= Html::encode($componente->marca ?? '') ?></td>
+                            <td><?= Html::encode($componente->modelo ?? '') ?></td>
+                            <td><?= Html::encode($componente->numero_serie ?? '') ?></td>
+                            <td><?= Html::encode($componente->capacidad ?? '') ?></td>
+                            <td><?= Html::encode($componente->estado) ?></td>
+                            <td><?= Html::encode($componente->observaciones ?? '') ?></td>
                             <td>
-                                <?= \yii\helpers\Html::a(
+                                <?= Html::a(
                                     'Editar',
-                                    ['/componente/update','id' => $componente->id,],
-                                    ['class' => 'btn btn-primary btn-sm',]) 
-                                ?>
+                                    ['/componente/update', 'id' => $componente->id],
+                                    ['class' => 'btn btn-primary btn-sm']
+                                ) ?>
 
-
-                                <?= \yii\helpers\Html::a(
+                                <?= Html::a(
                                     'Eliminar',
+                                    ['/componente/delete', 'id' => $componente->id],
                                     [
-                                        '/componente/delete','id' => $componente->id,],
-                                    ['class' => 'btn btn-danger btn-sm','data' => [
+                                        'class' => 'btn btn-danger btn-sm',
+                                        'data' => [
                                             'confirm' => '¿Seguro que deseas eliminar este componente?',
                                             'method' => 'post',
-                                        ],]) 
-                                ?>
+                                        ],
+                                    ]
+                                ) ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -159,25 +153,28 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php endif; ?>
 
-
     <hr>
 
     <h2>Historial de diagnósticos</h2>
-    <p>
+
     <?php if ($model->estado_registro === 'Activo'): ?>
-        <?= Html::a(
-            'Registrar diagnóstico',
-            ['/diagnostico/create', 'equipo_id' => $model->id],
-            ['class' => 'btn btn-success']
-        ) ?>
+        <p>
+            <?= Html::a(
+                'Registrar diagnóstico',
+                ['/diagnostico/create', 'equipo_id' => $model->id],
+                ['class' => 'btn btn-success']
+            ) ?>
+        </p>
     <?php endif; ?>
-    </p>
 
     <?php if (empty($model->diagnosticos)): ?>
+
         <div class="alert alert-info">
             Este equipo todavía no tiene diagnósticos registrados.
         </div>
+
     <?php else: ?>
+
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
                 <thead>
@@ -192,18 +189,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tbody>
                     <?php foreach ($model->diagnosticos as $diagnostico): ?>
                         <tr>
-                            <td><?= \yii\helpers\Html::encode($diagnostico->fecha) ?></td>
-                            <td><?= \yii\helpers\Html::encode($diagnostico->tipo) ?></td>
-                            <td><?= \yii\helpers\Html::encode($diagnostico->resultado) ?></td>
-                            <td><?= \yii\helpers\Html::encode($diagnostico->fallas_encontradas ?? '') ?></td>
+                            <td><?= Html::encode($diagnostico->fecha) ?></td>
+                            <td><?= Html::encode($diagnostico->tipo) ?></td>
+                            <td><?= Html::encode($diagnostico->resultado) ?></td>
+                            <td><?= Html::encode($diagnostico->fallas_encontradas ?? '') ?></td>
                             <td>
-                                <?= \yii\helpers\Html::a(
+                                <?= Html::a(
                                     'Ver',
                                     ['/diagnostico/view', 'id' => $diagnostico->id],
                                     ['class' => 'btn btn-info btn-sm']
                                 ) ?>
 
-                                <?= \yii\helpers\Html::a(
+                                <?= Html::a(
                                     'Editar',
                                     ['/diagnostico/update', 'id' => $diagnostico->id],
                                     ['class' => 'btn btn-primary btn-sm']
@@ -214,8 +211,149 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tbody>
             </table>
         </div>
+
     <?php endif; ?>
 
+    <hr>
+
+    <h2>Historial de mantenimientos</h2>
+
+    <?php if ($model->estado_registro === 'Activo'): ?>
+        <p>
+            <?= Html::a(
+                'Registrar mantenimiento',
+                ['/mantenimiento/create', 'equipo_id' => $model->id],
+                ['class' => 'btn btn-success']
+            ) ?>
+        </p>
+    <?php endif; ?>
+
+    <?php if (empty($model->mantenimientos)): ?>
+
+        <div class="alert alert-info">
+            Este equipo todavía no tiene mantenimientos registrados.
+        </div>
+
+    <?php else: ?>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Resultado</th>
+                        <th>Pendientes</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($model->mantenimientos as $mantenimiento): ?>
+                        <tr>
+                            <td><?= Html::encode($mantenimiento->fecha) ?></td>
+                            <td><?= Html::encode($mantenimiento->tipo) ?></td>
+                            <td><?= Html::encode($mantenimiento->descripcion ?? '') ?></td>
+                            <td><?= Html::encode($mantenimiento->resultado ?? '') ?></td>
+                            <td><?= Html::encode($mantenimiento->pendientes ?? '') ?></td>
+                            <td>
+                                <?= Html::a(
+                                    'Ver',
+                                    ['/mantenimiento/view', 'id' => $mantenimiento->id],
+                                    ['class' => 'btn btn-info btn-sm']
+                                ) ?>
+
+                                <?= Html::a(
+                                    'Editar',
+                                    ['/mantenimiento/update', 'id' => $mantenimiento->id],
+                                    ['class' => 'btn btn-primary btn-sm']
+                                ) ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+    <?php endif; ?>
+
+
+<hr>
+
+<h2>Evidencias del equipo</h2>
+
+<p>
+<?= Html::a(
+    'Registrar evidencia',
+    ['/evidencia/create', 'equipo_id' => $model->id],
+    ['class' => 'btn btn-success']
+) ?>
+</p>
+
+<?php if (empty($model->evidencias)): ?>
+
+    <div class="alert alert-info">
+        Este equipo todavía no tiene evidencias registradas.
+    </div>
+
+<?php else: ?>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Archivo</th>
+                    <th>Descripción</th>
+                    <th>Relacionado con</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($model->evidencias as $evidencia): ?>
+                    <tr>
+                        <td>
+                            <?= Html::encode($evidencia->fecha_captura ?? '') ?>
+                        </td>
+                        <td>
+                            <?= Html::encode($evidencia->nombre_archivo) ?>
+                        </td>
+                        <td>
+                            <?= Html::encode($evidencia->descripcion ?? '') ?>
+                        </td>
+                        <td>
+                            <?php if ($evidencia->diagnostico_id !== null): ?>
+                                Diagnóstico #<?= Html::encode($evidencia->diagnostico_id) ?>
+                            <?php elseif ($evidencia->mantenimiento_id !== null): ?>
+                                Mantenimiento #<?= Html::encode($evidencia->mantenimiento_id) ?>
+                            <?php else: ?>
+                                Equipo
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?= Html::a(
+                                'Abrir archivo',
+                                Yii::$app->request->baseUrl . '/' . ltrim($evidencia->ruta_relativa, '/'),
+                                [
+                                    'class' => 'btn btn-info btn-sm',
+                                    'target' => '_blank',
+                                    'rel' => 'noopener noreferrer',
+                                ]
+                            ) ?>
+
+                            <?= Html::a(
+                                'Ver registro',
+                                ['/evidencia/view', 'id' => $evidencia->id],
+                                ['class' => 'btn btn-primary btn-sm']
+                            ) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+<?php endif; ?>
 
 
 </div>

@@ -2,20 +2,17 @@
 
 namespace app\controllers;
 
+use Yii;
+use app\models\Equipo;
 use app\models\Mantenimiento;
 use app\models\MantenimientoSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\ForbiddenHttpException;
 
-/**
- * MantenimientoController implements the CRUD actions for Mantenimiento model.
- */
 class MantenimientoController extends Controller
 {
-    /**
-     * @inheritDoc
-     */
     public function behaviors()
     {
         return array_merge(
@@ -31,15 +28,12 @@ class MantenimientoController extends Controller
         );
     }
 
-    /**
-     * Lists all Mantenimiento models.
-     *
-     * @return string
-     */
     public function actionIndex()
     {
         $searchModel = new MantenimientoSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams
+        );
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -47,12 +41,6 @@ class MantenimientoController extends Controller
         ]);
     }
 
-    /**
-     * Displays a single Mantenimiento model.
-     * @param int $id ID
-     * @return string
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionView($id)
     {
         return $this->render('view', [
@@ -60,21 +48,50 @@ class MantenimientoController extends Controller
         ]);
     }
 
-    /**
-     * Creates a new Mantenimiento model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
-     */
-    public function actionCreate()
+    public function actionCreate($equipo_id = null)
     {
         $model = new Mantenimiento();
 
+        if ($equipo_id !== null) {
+            $equipo = Equipo::findOne($equipo_id);
+
+            if ($equipo === null) {
+                throw new NotFoundHttpException(
+                    'El equipo seleccionado no existe.'
+                );
+            }
+
+            if ($equipo->estado_registro !== 'Activo') {
+                throw new ForbiddenHttpException(
+                    'No se pueden registrar mantenimientos para equipos dados de baja.'
+                );
+            }
+
+            $model->equipo_id = $equipo->id;
+        }
+
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post())) {
+                // Si se abrió desde un equipo, no permitir cambiarlo
+                // manipulando el formulario enviado.
+                if ($equipo_id !== null) {
+                    $model->equipo_id = $equipo_id;
+                }
+
+                if ($model->save()) {
+                    return $this->redirect([
+                        '/equipo/view',
+                        'id' => $model->equipo_id,
+                    ]);
+                }
             }
         } else {
             $model->loadDefaultValues();
+            $model->fecha = date('Y-m-d');
+
+            if ($equipo_id !== null) {
+                $model->equipo_id = $equipo_id;
+            }
         }
 
         return $this->render('create', [
@@ -82,19 +99,19 @@ class MantenimientoController extends Controller
         ]);
     }
 
-    /**
-     * Updates an existing Mantenimiento model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return string|\yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if (
+            $this->request->isPost
+            && $model->load($this->request->post())
+            && $model->save()
+        ) {
+            return $this->redirect([
+                '/equipo/view',
+                'id' => $model->equipo_id,
+            ]);
         }
 
         return $this->render('update', [
@@ -102,33 +119,27 @@ class MantenimientoController extends Controller
         ]);
     }
 
-    /**
-     * Deletes an existing Mantenimiento model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param int $id ID
-     * @return \yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        $equipoId = $model->equipo_id;
 
-        return $this->redirect(['index']);
+        $model->delete();
+
+        return $this->redirect([
+            '/equipo/view',
+            'id' => $equipoId,
+        ]);
     }
 
-    /**
-     * Finds the Mantenimiento model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $id ID
-     * @return Mantenimiento the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     protected function findModel($id)
     {
         if (($model = Mantenimiento::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        throw new NotFoundHttpException(
+            'El mantenimiento solicitado no existe.'
+        );
     }
 }

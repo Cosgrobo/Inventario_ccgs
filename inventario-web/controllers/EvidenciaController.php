@@ -84,12 +84,64 @@ class EvidenciaController extends Controller
 
 
 
-    public function actionCreate()
+
+    public function actionCreate($equipo_id = null, $diagnostico_id = null)
     {
         $model = new Evidencia();
 
+        // Si viene un diagnóstico, verificar que exista y obtener su equipo.
+        if ($diagnostico_id !== null) {
+            $diagnostico = \app\models\Diagnostico::findOne(
+                (int) $diagnostico_id
+            );
+
+            if ($diagnostico === null) {
+                throw new \yii\web\NotFoundHttpException(
+                    'El diagnóstico solicitado no existe.'
+                );
+            }
+
+            if (
+                $equipo_id !== null
+                && (int) $equipo_id !== (int) $diagnostico->equipo_id
+            ) {
+                throw new \yii\web\BadRequestHttpException(
+                    'El diagnóstico no pertenece al equipo seleccionado.'
+                );
+            }
+
+            // El equipo del diagnóstico es la referencia correcta.
+            $equipo_id = $diagnostico->equipo_id;
+        }
+
+        if ($equipo_id !== null) {
+            $equipo = \app\models\Equipo::findOne((int) $equipo_id);
+
+            if ($equipo === null) {
+                throw new \yii\web\NotFoundHttpException(
+                    'El equipo solicitado no existe.'
+                );
+            }
+
+            $model->equipo_id = $equipo->id;
+        }
+
+        if ($diagnostico_id !== null) {
+            $model->diagnostico_id = (int) $diagnostico_id;
+        }
+
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
+
+                // No permitir cambiar el equipo o diagnóstico de la URL.
+                if ($equipo_id !== null) {
+                    $model->equipo_id = (int) $equipo_id;
+                }
+
+                if ($diagnostico_id !== null) {
+                    $model->diagnostico_id = (int) $diagnostico_id;
+                }
+
                 $model->archivoSubido = UploadedFile::getInstance(
                     $model,
                     'archivoSubido'
@@ -97,9 +149,9 @@ class EvidenciaController extends Controller
 
                 if ($model->archivoSubido !== null) {
                     $model->nombre_archivo = $model->archivoSubido->name;
-                    $model->ruta_relativa = 'uploads/evidencias/' .
-                        Yii::$app->security->generateRandomString(16) .
-                        '.' . strtolower($model->archivoSubido->extension);
+                    $model->ruta_relativa = 'uploads/evidencias/'
+                        . Yii::$app->security->generateRandomString(16)
+                        . '.' . strtolower($model->archivoSubido->extension);
                 }
 
                 if ($model->validate()) {
@@ -109,11 +161,15 @@ class EvidenciaController extends Controller
                             'Debes seleccionar un archivo.'
                         );
                     } else {
-                        $directorio = Yii::getAlias('@webroot/uploads/evidencias');
+                        $directorio = Yii::getAlias(
+                            '@webroot/uploads/evidencias'
+                        );
 
                         FileHelper::createDirectory($directorio);
 
-                        $rutaFisica = Yii::getAlias('@webroot/' . $model->ruta_relativa);
+                        $rutaFisica = Yii::getAlias(
+                            '@webroot/' . $model->ruta_relativa
+                        );
 
                         if ($model->archivoSubido->saveAs($rutaFisica)) {
                             if ($model->save(false)) {
@@ -177,6 +233,30 @@ class EvidenciaController extends Controller
 
         return $this->redirect(['index']);
     }
+
+
+    public function actionMantenimientosPorEquipo($equipo_id)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $mantenimientos = \app\models\Mantenimiento::find()
+            ->where(['equipo_id' => (int) $equipo_id])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+
+        $resultado = [];
+
+        foreach ($mantenimientos as $mantenimiento) {
+            $resultado[] = [
+                'id' => $mantenimiento->id,
+                'fecha' => $mantenimiento->fecha,
+                'tipo' => $mantenimiento->tipo,
+            ];
+        }
+
+        return $resultado;
+    }
+
 
     /**
      * Finds the Evidencia model based on its primary key value.

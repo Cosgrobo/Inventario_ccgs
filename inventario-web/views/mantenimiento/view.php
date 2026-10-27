@@ -7,7 +7,7 @@ use yii\widgets\DetailView;
 /** @var app\models\Mantenimiento $model */
 
 $this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Mantenimientos', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Mantenimientos'];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
@@ -24,6 +24,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 'method' => 'post',
             ],
         ]) ?>
+        <?= Html::a('Volver al equipo',
+                    ['/equipo/view', 'id' => $model->equipo_id],
+                    ['class' => 'btn btn-default']) ?>
     </p>
 
     <?= DetailView::widget([

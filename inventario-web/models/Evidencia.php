@@ -2,37 +2,18 @@
 
 namespace app\models;
 
-use Yii;
+use yii\db\ActiveRecord;
 use yii\web\UploadedFile;
 
 /**
- * This is the model class for table "evidencia".
- *
- * @property int $id
- * @property int $equipo_id
- * @property int|null $diagnostico_id
- * @property int|null $mantenimiento_id
- * @property string $nombre_archivo
- * @property string $ruta_relativa
- * @property string|null $descripcion
- * @property string|null $fecha_captura
- *
- * @property Diagnostico $diagnostico
- * @property Equipo $equipo
- * @property Mantenimiento $mantenimiento
+ * Modelo de la tabla evidencia.
  */
-class Evidencia extends \yii\db\ActiveRecord
+class Evidencia extends ActiveRecord
 {
-
-
     /**
-     * {@inheritdoc}
-     */
-   
-    /**
-     * Archivo temporal recibido desde el formulario.
+     * Archivo recibido desde el formulario.
      *
-     * @var \yii\web\UploadedFile|null
+     * @var UploadedFile|null
      */
     public $archivoSubido;
 
@@ -41,39 +22,91 @@ class Evidencia extends \yii\db\ActiveRecord
         return 'evidencia';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
-            [['diagnostico_id', 'mantenimiento_id', 'descripcion', 'fecha_captura'], 'default', 'value' => null],
-            [['equipo_id', 'nombre_archivo', 'ruta_relativa'], 'required'],
-            [['equipo_id', 'diagnostico_id', 'mantenimiento_id'], 'integer'],
+            [['diagnostico_id', 'mantenimiento_id', 'descripcion', 'fecha_captura'],
+                'default',
+                'value' => null,
+            ],
+
+            [['equipo_id', 'nombre_archivo', 'ruta_relativa'],'required',],
+            [['equipo_id', 'diagnostico_id', 'mantenimiento_id'],'integer',],
             [['descripcion'], 'string'],
             [['fecha_captura'], 'safe'],
             [['nombre_archivo'], 'string', 'max' => 255],
             [['ruta_relativa'], 'string', 'max' => 500],
             [['archivoSubido'],
-            'file',
-            'skipOnEmpty' => true,
-            'extensions' => ['png', 'jpg', 'jpeg', 'pdf'],
-            'maxSize' => 5 * 1024 * 1024,],
-            [['equipo_id'], 'exist', 'skipOnError' => true, 'targetClass' => Equipo::class, 'targetAttribute' => ['equipo_id' => 'id']],
-            [['diagnostico_id'], 'exist', 'skipOnError' => true, 'targetClass' => Diagnostico::class, 'targetAttribute' => ['diagnostico_id' => 'id']],
-            [['mantenimiento_id'], 'exist', 'skipOnError' => true, 'targetClass' => Mantenimiento::class, 'targetAttribute' => ['mantenimiento_id' => 'id']],
+                'file',
+                'skipOnEmpty' => true,
+                'extensions' => ['png', 'jpg', 'jpeg', 'pdf'],
+                'maxSize' => 5 * 1024 * 1024,
+                'tooBig' => 'El archivo no debe superar los 5 MB.',
+                'wrongExtension' => 'Solo se permiten archivos PNG, JPG, JPEG y PDF.',
+            ],
+
+            [['equipo_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Equipo::class,
+                'targetAttribute' => ['equipo_id' => 'id'],
+            ],
+
+            [['diagnostico_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Diagnostico::class,
+                'targetAttribute' => ['diagnostico_id' => 'id'],
+            ],
+
+            [['mantenimiento_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Mantenimiento::class,
+                'targetAttribute' => ['mantenimiento_id' => 'id'],
+            ],
+
+            [['diagnostico_id', 'mantenimiento_id'],
+                'validarRelacionUnica',
+            ],
         ];
     }
 
-
-    public function beforeValidate()
+    /**
+     * Comprueba que la evidencia tenga una sola relación
+     * y que corresponda al equipo seleccionado.
+     */
+    public function validarRelacionUnica($attribute, $params)
     {
-        if (!parent::beforeValidate()) {
-            return false;
+        $diagnosticoId = $this->diagnostico_id;
+        $mantenimientoId = $this->mantenimiento_id;
+
+        $tieneDiagnostico = $diagnosticoId !== null
+            && $diagnosticoId !== '';
+
+        $tieneMantenimiento = $mantenimientoId !== null
+            && $mantenimientoId !== '';
+
+        if (!$tieneDiagnostico && !$tieneMantenimiento) {
+            $this->addError(
+                'diagnostico_id',
+                'Debes asociar la evidencia a un diagnóstico o a un mantenimiento.'
+            );
+
+            return;
         }
 
-        if ($this->diagnostico_id !== null && $this->diagnostico_id !== '') {
-            $diagnostico = Diagnostico::findOne($this->diagnostico_id);
+        if ($tieneDiagnostico && $tieneMantenimiento) {
+            $this->addError(
+                'mantenimiento_id',
+                'Asocia la evidencia a un diagnóstico o a un mantenimiento, no a ambos.'
+            );
+
+            return;
+        }
+
+        if ($tieneDiagnostico) {
+            $diagnostico = Diagnostico::findOne($diagnosticoId);
 
             if ($diagnostico === null) {
                 $this->addError(
@@ -88,8 +121,8 @@ class Evidencia extends \yii\db\ActiveRecord
             }
         }
 
-        if ($this->mantenimiento_id !== null && $this->mantenimiento_id !== '') {
-            $mantenimiento = Mantenimiento::findOne($this->mantenimiento_id);
+        if ($tieneMantenimiento) {
+            $mantenimiento = Mantenimiento::findOne($mantenimientoId);
 
             if ($mantenimiento === null) {
                 $this->addError(
@@ -103,69 +136,35 @@ class Evidencia extends \yii\db\ActiveRecord
                 );
             }
         }
-
-        if (
-            $this->diagnostico_id !== null
-            && $this->diagnostico_id !== ''
-            && $this->mantenimiento_id !== null
-            && $this->mantenimiento_id !== ''
-        ) {
-            $this->addError(
-                'mantenimiento_id',
-                'Asocia la evidencia a un diagnóstico o a un mantenimiento, no a ambos.'
-            );
-        }
-
-        return !$this->hasErrors();
     }
 
-
-
-    /**
-     * {@inheritdoc}
-     */
     public function attributeLabels()
     {
         return [
             'id' => 'ID',
-            'equipo_id' => 'Equipo ID',
-            'diagnostico_id' => 'Diagnostico ID',
-            'mantenimiento_id' => 'Mantenimiento ID',
-            'nombre_archivo' => 'Nombre Archivo',
-            'ruta_relativa' => 'Ruta Relativa',
-            'descripcion' => 'Descripcion',
-            'fecha_captura' => 'Fecha Captura',
+            'equipo_id' => 'Equipo',
+            'diagnostico_id' => 'Diagnóstico',
+            'mantenimiento_id' => 'Mantenimiento',
+            'nombre_archivo' => 'Nombre del archivo',
+            'ruta_relativa' => 'Ruta del archivo',
+            'descripcion' => 'Descripción',
+            'fecha_captura' => 'Fecha de captura',
+            'archivoSubido' => 'Archivo',
         ];
     }
 
-    /**
-     * Gets query for [[Diagnostico]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getDiagnostico()
     {
         return $this->hasOne(Diagnostico::class, ['id' => 'diagnostico_id']);
     }
 
-    /**
-     * Gets query for [[Equipo]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getEquipo()
     {
         return $this->hasOne(Equipo::class, ['id' => 'equipo_id']);
     }
 
-    /**
-     * Gets query for [[Mantenimiento]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getMantenimiento()
     {
         return $this->hasOne(Mantenimiento::class, ['id' => 'mantenimiento_id']);
     }
-
 }

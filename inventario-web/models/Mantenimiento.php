@@ -5,81 +5,72 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "mantenimiento".
- *
- * @property int $id
- * @property int $equipo_id
- * @property string $fecha
- * @property string $tipo
- * @property string|null $descripcion
- * @property string|null $resultado
- * @property string|null $pendientes
- *
- * @property Equipo $equipo
- * @property Evidencia[] $evidencias
+ * Modelo para la tabla mantenimiento.
  */
 class Mantenimiento extends \yii\db\ActiveRecord
 {
-
-
-    /**
-     * {@inheritdoc}
-     */
     public static function tableName()
     {
         return 'mantenimiento';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
-            [['descripcion', 'resultado', 'pendientes'], 'default', 'value' => null],
-            [['equipo_id', 'fecha', 'tipo'], 'required'],
+            [
+                ['descripcion', 'resultado', 'pendientes'],
+                'default',
+                'value' => null,
+            ],
+            [
+                ['equipo_id', 'fecha', 'tipo'],
+                'required',
+            ],
             [['equipo_id'], 'integer'],
-            [['fecha'], 'safe'],
-            [['descripcion', 'resultado', 'pendientes'], 'string'],
+            [
+                ['fecha'],
+                'date',
+                'format' => 'php:Y-m-d',
+            ],
+            [
+                ['descripcion', 'resultado', 'pendientes'],
+                'string',
+            ],
             [['tipo'], 'string', 'max' => 50],
-            [['equipo_id'], 'exist', 'skipOnError' => true, 'targetClass' => Equipo::class, 'targetAttribute' => ['equipo_id' => 'id']],
+            [
+                ['equipo_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Equipo::class,
+                'targetAttribute' => ['equipo_id' => 'id'],
+            ],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function attributeLabels()
     {
         return [
             'id' => 'ID',
-            'equipo_id' => 'Equipo ID',
-            'fecha' => 'Fecha',
-            'tipo' => 'Tipo',
-            'descripcion' => 'Descripcion',
+            'equipo_id' => 'Equipo',
+            'fecha' => 'Fecha del mantenimiento',
+            'tipo' => 'Tipo de mantenimiento',
+            'descripcion' => 'Descripción del trabajo realizado',
             'resultado' => 'Resultado',
-            'pendientes' => 'Pendientes',
+            'pendientes' => 'Trabajos pendientes',
         ];
     }
 
-    /**
-     * Gets query for [[Equipo]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getEquipo()
     {
-        return $this->hasOne(Equipo::class, ['id' => 'equipo_id']);
+        return $this->hasOne(Equipo::class, [
+            'id' => 'equipo_id',
+        ]);
     }
 
-    /**
-     * Gets query for [[Evidencias]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
     public function getEvidencias()
     {
-        return $this->hasMany(Evidencia::class, ['mantenimiento_id' => 'id']);
+        return $this->hasMany(Evidencia::class, [
+            'mantenimiento_id' => 'id',
+        ]);
     }
-
 }

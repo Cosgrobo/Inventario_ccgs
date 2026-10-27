@@ -42,21 +42,30 @@ if ($model->equipo_id) {
     );
 }
 
-// Lista de mantenimientos
-$mantenimientos = ArrayHelper::map(
-    Mantenimiento::find()
-        ->orderBy(['id' => SORT_DESC])
-        ->all(),
-    'id',
-    function ($mantenimiento) {
-        return 'Mantenimiento #' . $mantenimiento->id
-            . ' (Equipo ID: ' . $mantenimiento->equipo_id . ')';
-    }
-);
+// Mantenimientos del equipo seleccionado
+$mantenimientos = [];
 
-// URL para obtener diagnósticos según el equipo
+if ($model->equipo_id) {
+    $mantenimientos = ArrayHelper::map(
+        Mantenimiento::find()
+            ->where(['equipo_id' => $model->equipo_id])
+            ->orderBy(['id' => SORT_DESC])
+            ->all(),
+        'id',
+        function ($mantenimiento) {
+            return 'Mantenimiento #' . $mantenimiento->id
+                . ' - ' . $mantenimiento->fecha
+                . ' - ' . $mantenimiento->tipo;
+        }
+    );
+}
+
 $urlDiagnosticos = Url::to([
     'evidencia/diagnosticos-por-equipo',
+]);
+
+$urlMantenimientos = Url::to([
+    'evidencia/mantenimientos-por-equipo',
 ]);
 
 ?>
@@ -69,16 +78,34 @@ $urlDiagnosticos = Url::to([
         ],
     ]); ?>
 
-    <!-- Equipo -->
-    <?= $form->field($model, 'equipo_id')->dropDownList(
-        $equipos,
-        [
-            'prompt' => 'Selecciona un equipo',
-            'id' => 'evidencia-equipo_id',
-        ]
-    ) ?>
 
-    <!-- Diagnóstico -->
+    <?php if ($model->equipo_id !== null): ?>
+
+        <?php
+        $equipoSeleccionado = Equipo::findOne($model->equipo_id);
+        ?>
+
+        <?= $form->field($model, 'equipo_id')->hiddenInput()->label(false) ?>
+
+        <div class="form-group">
+            <label class="control-label">Equipo seleccionado</label>
+            <p class="form-control-static">
+                <?= Html::encode($equipoSeleccionado->codigo) ?>
+            </p>
+        </div>
+
+    <?php else: ?>
+
+        <?= $form->field($model, 'equipo_id')->dropDownList(
+            $equipos,
+            [
+                'prompt' => 'Selecciona un equipo',
+                'id' => 'evidencia-equipo_id',
+            ]
+        ) ?>
+
+    <?php endif; ?>
+
     <?= $form->field($model, 'diagnostico_id')->dropDownList(
         $diagnosticos,
         [
@@ -87,7 +114,6 @@ $urlDiagnosticos = Url::to([
         ]
     ) ?>
 
-    <!-- Mantenimiento -->
     <?= $form->field($model, 'mantenimiento_id')->dropDownList(
         $mantenimientos,
         [
@@ -96,23 +122,19 @@ $urlDiagnosticos = Url::to([
         ]
     ) ?>
 
-    <!-- Archivo -->
     <?= $form->field($model, 'archivoSubido')->fileInput([
         'accept' => '.png,.jpg,.jpeg,.pdf',
     ])->hint(
         'Formatos permitidos: PNG, JPG, JPEG y PDF. Tamaño máximo: 5 MB.'
     ) ?>
 
-    <!-- Descripción -->
     <?= $form->field($model, 'descripcion')->textarea([
         'rows' => 4,
         'placeholder' => 'Describe qué muestra esta evidencia...',
     ]) ?>
 
-    <!-- Fecha -->
     <?= $form->field($model, 'fecha_captura')->input('date') ?>
 
-    <!-- Guardar -->
     <div class="form-group">
         <?= Html::submitButton(
             'Guardar evidencia',
@@ -126,58 +148,55 @@ $urlDiagnosticos = Url::to([
 
 <?php
 
-// JavaScript para actualizar los diagnósticos al cambiar de equipo.
 $urlDiagnosticosJs = Json::htmlEncode($urlDiagnosticos);
+$urlMantenimientosJs = Json::htmlEncode($urlMantenimientos);
 
 $js = <<<JS
 (function () {
     const equipoSelect = $('#evidencia-equipo_id');
     const diagnosticoSelect = $('#evidencia-diagnostico_id');
+    const mantenimientoSelect = $('#evidencia-mantenimiento_id');
+
+    function actualizarSelect(select, mensaje) {
+        select.empty().append(
+            $('<option>', {
+                value: '',
+                text: mensaje
+            })
+        );
+    }
 
     equipoSelect.on('change', function () {
         const equipoId = $(this).val();
 
-        diagnosticoSelect.empty();
+        // Limpiar las selecciones anteriores para evitar asociaciones incorrectas.
+        actualizarSelect(
+            diagnosticoSelect,
+            equipoId ? 'Cargando diagnósticos...' : 'Selecciona primero un equipo'
+        );
+
+        actualizarSelect(
+            mantenimientoSelect,
+            equipoId ? 'Cargando mantenimientos...' : 'Selecciona primero un equipo'
+        );
 
         if (!equipoId) {
-            diagnosticoSelect.append(
-                $('<option>', {
-                    value: '',
-                    text: 'Selecciona primero un equipo'
-                })
-            );
             return;
         }
 
-        diagnosticoSelect.append(
-            $('<option>', {
-                value: '',
-                text: 'Cargando diagnósticos...'
-            })
-        );
-
-        const solicitud = $.ajax({
+        // Cargar diagnósticos del equipo seleccionado.
+        $.ajax({
             url: $urlDiagnosticosJs,
             method: 'GET',
             dataType: 'json',
-            data: {
-                equipo_id: equipoId
-            },
+            data: { equipo_id: equipoId },
             cache: true
-        });
-
-        solicitud
-
-        .done(function (diagnosticos) {
-            diagnosticoSelect.empty();
-
-            diagnosticoSelect.append(
-                $('<option>', {
-                    value: '',
-                    text: diagnosticos.length
-                        ? 'Selecciona un diagnóstico'
-                        : 'Este equipo no tiene diagnósticos'
-                })
+        }).done(function (diagnosticos) {
+            actualizarSelect(
+                diagnosticoSelect,
+                diagnosticos.length
+                    ? 'Selecciona un diagnóstico'
+                    : 'Este equipo no tiene diagnósticos'
             );
 
             diagnosticos.forEach(function (diagnostico) {
@@ -190,27 +209,61 @@ $js = <<<JS
                     })
                 );
             });
-        })
-        .fail(function (xhr) {
-            console.error(
-                'Error al cargar diagnósticos:',
-                xhr.status,
-                xhr.responseText
+        }).fail(function (xhr) {
+            console.error('Error al cargar diagnósticos:', xhr.status);
+            actualizarSelect(
+                diagnosticoSelect,
+                'Error al cargar los diagnósticos'
+            );
+        });
+
+        // Cargar mantenimientos del equipo seleccionado.
+        $.ajax({
+            url: $urlMantenimientosJs,
+            method: 'GET',
+            dataType: 'json',
+            data: { equipo_id: equipoId },
+            cache: true
+        }).done(function (mantenimientos) {
+            actualizarSelect(
+                mantenimientoSelect,
+                mantenimientos.length
+                    ? 'Selecciona un mantenimiento'
+                    : 'Este equipo no tiene mantenimientos'
             );
 
-            diagnosticoSelect.empty().append(
-                $('<option>', {
-                    value: '',
-                    text: 'Error al cargar los diagnósticos'
-                })
+            mantenimientos.forEach(function (mantenimiento) {
+                mantenimientoSelect.append(
+                    $('<option>', {
+                        value: mantenimiento.id,
+                        text: 'Mantenimiento #' + mantenimiento.id
+                            + ' - ' + mantenimiento.fecha
+                            + ' - ' + mantenimiento.tipo
+                    })
+                );
+            });
+        }).fail(function (xhr) {
+            console.error('Error al cargar mantenimientos:', xhr.status);
+            actualizarSelect(
+                mantenimientoSelect,
+                'Error al cargar los mantenimientos'
             );
         });
     });
 })();
 JS;
 
-// Insertar la URL generada por Yii en el JavaScript.
-$js = str_replace('$urlDiagnosticosJs', $urlDiagnosticosJs, $js);
+$js = str_replace(
+    '$urlDiagnosticosJs',
+    $urlDiagnosticosJs,
+    $js
+);
+
+$js = str_replace(
+    '$urlMantenimientosJs',
+    $urlMantenimientosJs,
+    $js
+);
 
 $this->registerJs($js);
 

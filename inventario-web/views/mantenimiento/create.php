@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /** @var app\models\Mantenimiento $model */
 
 $this->title = 'Create Mantenimiento';
-$this->params['breadcrumbs'][] = ['label' => 'Mantenimientos', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Mantenimientos'];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="mantenimiento-create">
