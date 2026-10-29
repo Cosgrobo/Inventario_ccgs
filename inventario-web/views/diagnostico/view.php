@@ -51,6 +51,54 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 
+
+    <hr>
+
+    <h2>Componentes registrados en este diagnóstico</h2>
+
+    <?php $componentes = $model->componentesHistoricos; ?>
+
+    <?php if (empty($componentes)): ?>
+
+        <div class="alert alert-info">
+            Este diagnóstico no tiene componentes históricos registrados.
+        </div>
+
+    <?php else: ?>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Número de serie</th>
+                        <th>Capacidad</th>
+                        <th>Estado registrado</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <?php foreach ($componentes as $componente): ?>
+                        <tr>
+                            <td><?= Html::encode($componente->tipo) ?></td>
+                            <td><?= Html::encode($componente->marca ?? '') ?></td>
+                            <td><?= Html::encode($componente->modelo ?? '') ?></td>
+                            <td><?= Html::encode($componente->numero_serie ?? '') ?></td>
+                            <td><?= Html::encode($componente->capacidad ?? '') ?></td>
+                            <td><?= Html::encode($componente->estado) ?></td>
+                            <td><?= Html::encode($componente->observaciones ?? '') ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+    <?php endif; ?>
+
+
     <hr>
 
     <h2>Evidencias del diagnóstico</h2>

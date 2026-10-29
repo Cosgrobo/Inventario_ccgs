@@ -86,4 +86,15 @@ class Diagnostico extends \yii\db\ActiveRecord
         return $this->hasMany(Evidencia::class, ['diagnostico_id' => 'id']);
     }
 
+    /**
+     * Obtiene los componentes históricos del diagnóstico.
+     */
+    public function getComponentesHistoricos()
+    {
+        return $this->hasMany(
+            DiagnosticoComponente::class,
+            ['diagnostico_id' => 'id']
+        );
+    }
+
 }

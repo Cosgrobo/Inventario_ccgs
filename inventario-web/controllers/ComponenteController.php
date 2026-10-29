@@ -181,8 +181,8 @@ class ComponenteController extends Controller
                     $transaccion->commit();
 
                     return $this->redirect([
-                        '/equipo/view',
-                        'id' => $equipo->id,
+                     '/diagnostico/create',
+                     'equipo_id' => $equipo->id,
                     ]);
                 } catch (\Throwable $e) {
                     $transaccion->rollBack();
@@ -197,7 +197,96 @@ class ComponenteController extends Controller
         ]);
     }
 
+    
 
+    public function actionEditarMultiple($equipo_id)
+    {
+        $equipo = \app\models\Equipo::findOne($equipo_id);
+
+        if ($equipo === null) {
+            throw new NotFoundHttpException('El equipo no existe.');
+        }
+
+        $componentes = Componente::find()
+            ->where(['equipo_id' => $equipo->id])
+            ->all();
+
+        if (empty($componentes)) {
+            $componentes = [new Componente()];
+        }
+
+        if ($this->request->isPost) {
+            $post = $this->request->post();
+            $filas = $post['Componente'] ?? [];
+            $componentesActualizados = [];
+            $validos = !empty($filas);
+
+            foreach ($filas as $indice => $fila) {
+                // Si la fila tiene ID, buscamos el componente existente.
+                if (!empty($fila['id'])) {
+                    $componente = Componente::findOne([
+                        'id' => $fila['id'],
+                        'equipo_id' => $equipo->id,
+                    ]);
+
+                    if ($componente === null) {
+                        throw new NotFoundHttpException(
+                            'Uno de los componentes no pertenece a este equipo.'
+                        );
+                    }
+                } else {
+                    // Las filas sin ID representan componentes nuevos.
+                    $componente = new Componente();
+                    $componente->equipo_id = $equipo->id;
+                }
+
+                $componente->load(['Componente' => $fila]);
+                $componente->equipo_id = $equipo->id;
+
+                if (!$componente->validate()) {
+                    $validos = false;
+                }
+
+                $componentesActualizados[] = $componente;
+            }
+
+            if ($validos) {
+                $transaccion = Yii::$app->db->beginTransaction();
+
+                try {
+                    foreach ($componentesActualizados as $componente) {
+                        if (!$componente->save(false)) {
+                            throw new \RuntimeException(
+                                'No se pudo guardar un componente.'
+                            );
+                        }
+                    }
+
+                    $transaccion->commit();
+
+                    return $this->redirect([
+                        '/equipo/view',
+                        'id' => $equipo->id,
+                    ]);
+                } catch (\Throwable $e) {
+                    if ($transaccion->isActive) {
+                        $transaccion->rollBack();
+                    }
+
+                    throw $e;
+                }
+            }
+
+            $componentes = $componentesActualizados;
+        }
+
+        return $this->render('multiple', [
+            'equipo' => $equipo,
+            'componentes' => $componentes,
+            'modoEdicion' => true,
+        ]);
+    }
+    
     /**
      * Finds the Componente model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

@@ -171,21 +171,33 @@ class EvidenciaController extends Controller
                             '@webroot/' . $model->ruta_relativa
                         );
 
+
                         if ($model->archivoSubido->saveAs($rutaFisica)) {
-                            if ($model->save(false)) {
+
+                            // El archivo ya fue validado antes de guardarlo.
+                            // Evitar que save() intente validar de nuevo el archivo temporal.
+                            $model->archivoSubido = null;
+
+                            if ($model->save()) {
                                 return $this->redirect([
                                     '/equipo/view',
                                     'id' => $model->equipo_id,
                                 ]);
                             }
 
-                            @unlink($rutaFisica);
+                            // Si falla el registro, eliminar el archivo físico.
+                            if (is_file($rutaFisica)) {
+                                unlink($rutaFisica);
+                            }
+
                         } else {
                             $model->addError(
                                 'archivoSubido',
                                 'No fue posible guardar el archivo en el servidor.'
                             );
                         }
+
+
                     }
                 }
             }

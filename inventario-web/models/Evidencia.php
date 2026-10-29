@@ -66,9 +66,29 @@ class Evidencia extends ActiveRecord
                 'targetAttribute' => ['mantenimiento_id' => 'id'],
             ],
 
-            [['diagnostico_id', 'mantenimiento_id'],
-                'validarRelacionUnica',
+            [['diagnostico_id'],
+                'required',
+                'when' => function ($model) {
+                    return empty($model->mantenimiento_id);
+                },
+                'whenClient' => "function (attribute, value) {
+                    return !$('#evidencia-mantenimiento_id').val();
+                }",
+                'message' => 'Debes seleccionar un diagnóstico o un mantenimiento.',
             ],
+
+            [['mantenimiento_id'],
+                'required',
+                'when' => function ($model) {
+                    return empty($model->diagnostico_id);
+                },
+                'whenClient' => "function (attribute, value) {
+                    return !$('#evidencia-diagnostico_id').val();
+                }",
+                'message' => 'Debes seleccionar un diagnóstico o un mantenimiento.',
+            ],
+
+               [['diagnostico_id', 'mantenimiento_id'],'validarRelacionUnica',],
         ];
     }
 

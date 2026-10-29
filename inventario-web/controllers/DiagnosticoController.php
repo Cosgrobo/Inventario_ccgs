@@ -7,6 +7,7 @@ use app\models\DiagnosticoSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use Yii;
 
 /**
  * DiagnosticoController implements the CRUD actions for Diagnostico model.
@@ -67,6 +68,7 @@ class DiagnosticoController extends Controller
      */
 
 
+
     public function actionCreate($equipo_id = null)
     {
         $model = new Diagnostico();
@@ -84,11 +86,53 @@ class DiagnosticoController extends Controller
         }
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect([
-                    '/equipo/view',
-                    'id' => $model->equipo_id,
-                ]);
+            if ($model->load($this->request->post())) {
+
+                $transaction = Yii::$app->db->beginTransaction();
+
+                try {
+                    if (!$model->save()) {
+                        $transaction->rollBack();
+                    } else {
+                        $componentes = \app\models\Componente::find()
+                            ->where(['equipo_id' => $model->equipo_id])
+                            ->all();
+
+                        foreach ($componentes as $componente) {
+                            $historico = new \app\models\DiagnosticoComponente();
+
+                            $historico->diagnostico_id = $model->id;
+                            $historico->componente_id = $componente->id;
+                            $historico->tipo = $componente->tipo;
+                            $historico->marca = $componente->marca;
+                            $historico->modelo = $componente->modelo;
+                            $historico->numero_serie = $componente->numero_serie;
+                            $historico->capacidad = $componente->capacidad;
+                            $historico->estado = $componente->estado;
+                            $historico->observaciones = $componente->observaciones;
+
+                            if (!$historico->save()) {
+                                throw new \RuntimeException(
+                                    'No se pudo guardar el historial de componentes: ' .
+                                    json_encode($historico->errors, JSON_UNESCAPED_UNICODE)
+                                );
+                            }
+                        }
+
+                        $transaction->commit();
+
+                        return $this->redirect([
+                            '/equipo/view',
+                            'id' => $model->equipo_id,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    if ($transaction->isActive) {
+                        $transaction->rollBack();
+                    }
+
+                    throw $e;
+                }
             }
         } else {
             $model->loadDefaultValues();

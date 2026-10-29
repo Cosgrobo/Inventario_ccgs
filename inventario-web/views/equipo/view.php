@@ -34,6 +34,12 @@ $this->params['breadcrumbs'][] = $this->title;
             ['/componente/multiple', 'equipo_id' => $model->id],
             ['class' => 'btn btn-success']
         ) ?>
+        
+        <?= Html::a(
+            'Editar',
+            ['/componente/update', 'id' => $model->id],
+            ['class' => 'btn btn-primary btn-sm']
+        ) ?>
 
         <?= Html::a(
             'Volver a equipos',
@@ -159,11 +165,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php if ($model->estado_registro === 'Activo'): ?>
         <p>
-            <?= Html::a(
-                'Registrar diagnóstico',
-                ['/diagnostico/create', 'equipo_id' => $model->id],
-                ['class' => 'btn btn-success']
-            ) ?>
+        
         </p>
     <?php endif; ?>
 
@@ -198,12 +200,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                     'Ver',
                                     ['/diagnostico/view', 'id' => $diagnostico->id],
                                     ['class' => 'btn btn-info btn-sm']
-                                ) ?>
-
-                                <?= Html::a(
-                                    'Editar',
-                                    ['/diagnostico/update', 'id' => $diagnostico->id],
-                                    ['class' => 'btn btn-primary btn-sm']
                                 ) ?>
                             </td>
                         </tr>
